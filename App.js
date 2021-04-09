@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { Text, View, Button, TouchableOpacity, Alert, TextInput, ScrollView } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useRoute } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import styles from './Styles';
+import { render } from 'react-dom';
 
 const notes= [
   {
@@ -33,18 +34,25 @@ const notes= [
 ]
 
 class NoteList extends React.Component {
-  state = {
-    notes: notes,
-    newNote:""
+    state = {
+        notes: notes,
+        newNote:""
+    }
+      
+ 
+
+  static getDerivedStateFromProps(){
+    console.log("GDSFP")
+    return null
   }
 
-  addNote=()=>{
-    const noteObject = {
-      content: this.state.newNote,
-      id: this.state.notes.length + 1
-    }
+  addNote(){
+    const par = this.props.route.params
+    console.log(par)
+    const newNote = par ? par.post : null
+    console.log(newNote)
 
-    if (this.state.notes.filter(note => note.content.toLowerCase() === this.state.newNote.toLowerCase()).length > 0) {
+    if (this.state.notes.filter(note => note.content.toLowerCase() === newNote.toLowerCase()).length > 0) {
       Alert.alert("Note already there",
       "Add another note",
       [
@@ -52,47 +60,39 @@ class NoteList extends React.Component {
       ])
 
     } else {
-      const notes = this.state.notes.concat(noteObject)
 
+      const noteObject = {
+        content: newNote,
+        id: this.state.notes.length + 1
+      }
+
+      console.log(noteObject.content, noteObject.id )
+      const notes1 = this.state.notes.concat(noteObject)
+      console.log(notes1)
       this.setState({
-      notes: notes,
-      newNote: ''
-      })
+        notes: notes1,
+        newNote: ''
+        })
+      
+      
     }
 
-    
-    
-    
-  }
 
-  handleNoteChange = (event) => {
-    this.setState({ newNote: event })
   }
-
 
   render(){
-    
+    console.log("render")
+    const par = this.props.route.params
+    console.log(par)
+
     return (
       <View style={styles.noteContainer}>
         <ScrollView style={styles.noteList}>
             {this.state.notes.map(note => 
               <Text key={note.id} style={styles.nList}>{note.content}</Text>
-              )}
+            )}
         </ScrollView>
         <View style={styles.noteForm}>
-          <TextInput
-              placeholder="  Write a note here... "
-              value={this.state.newNote}
-              onChangeText={this.handleNoteChange}
-              style={styles.noteInput}
-          />
-            <View style = {styles.buttonContainer}>
-              <TouchableOpacity 
-                style={styles.noteButton}
-                onPress={this.addNote}
-              ><Text style = {styles.buttonText}>Add Note</Text></TouchableOpacity>
-            </View>
-
             <View style = {styles.buttonContainer}>
               <TouchableOpacity 
                 style={styles.noteButton}
@@ -113,17 +113,27 @@ class NoteList extends React.Component {
 
 }
 
-const AddNoteScreen = () => {
+const AddNoteScreen = ({navigation, route}) => {
+  const [postNote, setPostNote] = React.useState('');
+  
   return (
     <View>
       <Text>Add a new note</Text>
 
       <TextInput
-        placeholder="Write a note here"
+        placeholder="  Write a note here... "
+        value={postNote}
+        onChangeText={setPostNote}
+        style={styles.noteInput}
       />
-      <Button
-        title="Add Note"
-      />
+      <View style = {styles.buttonContainer}>
+        <TouchableOpacity 
+          style={styles.noteButton}
+          onPress={() => {navigation.navigate('ListNotes', { post: postNote })}}
+        >
+          <Text style = {styles.buttonText}>Add Note</Text>
+        </TouchableOpacity>
+      </View>
 
     </View>
   );
@@ -134,6 +144,7 @@ const AddNoteScreen = () => {
 const Stack = createStackNavigator();
 
 const App = () => {
+  
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Notes" screenOptions={{ headerStyle: {backgroundColor: '#ffa500',}}}>
@@ -142,6 +153,7 @@ const App = () => {
       </Stack.Navigator>
     </NavigationContainer>
   );
+  
 }
 
 
